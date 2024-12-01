@@ -1,0 +1,47 @@
+{
+    "version": "0.2.0",
+    "configurations": [
+        {
+            "name": "Debug",
+            "type": "lldb",
+            "request": "launch",
+            "preLaunchTask": "Build",
+            "program": "${workspaceFolder}/build/${relativeFileDirname}",
+            "args": [],
+            "cwd": "${fileDirname}"
+        },
+        {
+            "name": "Debug tests",
+            "type": "lldb",
+            "request": "launch",
+            "preLaunchTask": "Test",
+            "program": "${workspaceFolder}/build/${relativeFileDirname}-tests",
+            "args": [],
+            "cwd": "${fileDirname}"
+        },
+        {
+            "name": "(Windows) Debug",
+            "type": "cppvsdbg",
+            "request": "launch",
+            "preLaunchTask": "Build",
+            "program": "${workspaceFolder}\\build\\${relativeFileDirname}.exe",
+            "args": [],
+            "stopAtEntry": false,
+            "cwd": "${fileDirname}",
+            "environment": [],
+            "console": "integratedTerminal"
+        },
+        {
+            "name": "(Windows) Debug tests",
+            "type": "cppvsdbg",
+            "request": "launch",
+            "preLaunchTask": "Test",
+            "program": "${workspaceFolder}\\build\\${relativeFileDirname}-tests.exe",
+            "args": [],
+            "stopAtEntry": false,
+            "cwd": "${fileDirname}",
+            "environment": [],
+            "console": "integratedTerminal"
+        }
+    ]
+}

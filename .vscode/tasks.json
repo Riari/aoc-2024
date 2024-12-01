@@ -1,0 +1,44 @@
+{
+    "version": "2.0.0",
+    "command": "",
+    "args": [],
+    "tasks": [
+        {
+            "label": "Init",
+            "type": "shell",
+            "command": "odin run ${workspaceFolder}/tools -out:build/tools -- ${input:directoryName}",
+            "windows": {
+                "command": "odin run ${workspaceFolder}\\tools -out:build\\tools.exe -- ${input:directoryName}"
+            },
+            "problemMatcher": [],
+            "group": "none"
+        },
+        {
+            "label": "Build",
+            "type": "shell",
+            "command": "odin build ${relativeFileDirname} -debug -out:build/${relativeFileDirname}",
+            "windows": {
+                "command": "odin build ${relativeFileDirname} -debug -out:build\\${relativeFileDirname}.exe"
+            },
+            "group": "build"
+        },
+        {
+            "label": "Test",
+            "type": "shell",
+            "command": "odin test ${relativeFileDirname} -debug -define:ODIN_TEST_SHORT_LOGS=true -out:build/${relativeFileDirname}-tests",
+            "windows": {
+                "command": "odin test ${relativeFileDirname} -debug -define:ODIN_TEST_SHORT_LOGS=true -out:build\\${relativeFileDirname}-tests.exe"
+            },
+            "problemMatcher": [],
+            "group": "test"
+        }
+    ],
+    "inputs": [
+        {
+            "id": "directoryName",
+            "description": "Enter directory name",
+            "type": "promptString",
+            "default": "01"
+        }
+    ]
+}
