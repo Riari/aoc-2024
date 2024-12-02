@@ -4,7 +4,7 @@ import "core:log"
 import "core:os"
 import "core:strings"
 
-PATH_STUB :: "utils/init/stub"
+PATH_STUB :: "tools/stub"
 FILENAME_MAIN :: "main.odin"
 FILENAME_INPUT :: "input"
 
