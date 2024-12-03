@@ -1,22 +1,38 @@
 package main
 
+import "core:fmt"
+import "core:slice"
+import "core:strconv"
+import "core:strings"
 import "core:testing"
 
+import "../utils"
+
 main :: proc() {
-    part_1()
-    part_2()
+    input := utils.read_input()
+
+    part_1_result := part_1()
+    part_2_result := part_2()
+
+    fmt.printfln("Part 1: %d", part_1_result)
+    fmt.printfln("Part 2: %d", part_2_result)
+    return
 }
 
-part_1 :: proc() {
+part_1 :: proc() -> int {
+    return 0
 }
 
-part_2 :: proc() {
+part_2 :: proc() -> int {
+    return 0
 }
 
 @(test)
 test_part_1 :: proc(t: ^testing.T) {
+    assert(part_1() == 0)
 }
 
 @(test)
 test_part_2 :: proc(t: ^testing.T) {
+    assert(part_2() == 0)
 }
