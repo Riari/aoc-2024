@@ -44,7 +44,6 @@ test_removals :: proc(report: [dynamic]int, remove: [dynamic]int) -> bool {
         ordered_remove(&alt, index)
 
         if is_report_safe(alt, false) {
-            fmt.println(report)
             return true
         }
     }
