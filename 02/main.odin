@@ -8,35 +8,50 @@ import "core:testing"
 
 import "../utils"
 
+Report :: [dynamic]int
+Reports :: [dynamic]Report
+
 main :: proc() {
-    input := utils.read_input()
+    input := #load("input", string)
+
+    utils.start_measure(utils.Step.Parse)
+    reports := parse(input)
+    utils.end_measure()
+
+    utils.start_measure(utils.Step.Part1)
+    part_1_result := part_1(reports)
+    utils.end_measure()
+
+    utils.start_measure(utils.Step.Part2)
+    part_2_result := part_2(reports)
+    utils.end_measure()
+
+    utils.print_results(part_1_result, part_2_result)
+}
+
+parse :: proc(input: string) -> Reports {
     lines, _ := strings.split_lines(input)
 
-    reports := make([dynamic][dynamic]int, len(lines))
+    reports := make(Reports, len(lines))
 
     for i in 0..<len(lines) {
         if lines[i] == "" {
             continue
         }
         levels, _ := strings.fields(lines[i])
-        level_ints := make([dynamic]int, len(levels))
+        report := make(Report, len(levels))
         for y in 0..<len(levels) {
             level, _ := strconv.parse_int(levels[y])
-            level_ints[y] = level
+            report[y] = level
         }
 
-        reports[i] = level_ints
+        reports[i] = report
     }
 
-    part_1_result := part_1(reports)
-    part_2_result := part_2(reports)
-
-    fmt.printfln("Part 1: %d", part_1_result)
-    fmt.printfln("Part 2: %d", part_2_result)
-    return
+    return reports
 }
 
-test_removals :: proc(report: [dynamic]int, remove: [dynamic]int) -> bool {
+test_removals :: proc(report: Report, remove: Report) -> bool {
     for index in remove {
         alt := slice.clone_to_dynamic(report[:])
         defer delete(alt)
@@ -51,7 +66,7 @@ test_removals :: proc(report: [dynamic]int, remove: [dynamic]int) -> bool {
     return false
 }
 
-is_report_safe :: proc(report: [dynamic]int, dampen: bool) -> bool {
+is_report_safe :: proc(report: Report, dampen: bool) -> bool {
     increases: [dynamic]int
     decreases: [dynamic]int
     unchanged: [dynamic]int
@@ -121,7 +136,7 @@ is_report_safe :: proc(report: [dynamic]int, dampen: bool) -> bool {
     return false
 }
 
-solve :: proc(reports: [dynamic][dynamic]int, dampen: bool) -> int {
+solve :: proc(reports: Reports, dampen: bool) -> int {
     safe_count := 0
     for i in 0..<len(reports) {
         if len(reports[i]) == 0 { continue }
@@ -131,15 +146,15 @@ solve :: proc(reports: [dynamic][dynamic]int, dampen: bool) -> int {
     return safe_count
 }
 
-part_1 :: proc(reports: [dynamic][dynamic]int) -> int {
+part_1 :: proc(reports: Reports) -> int {
     return solve(reports, false)
 }
 
-part_2 :: proc(reports: [dynamic][dynamic]int) -> int {
+part_2 :: proc(reports: Reports) -> int {
     return solve(reports, true)
 }
 
-TEST_INPUT := [dynamic][dynamic]int{
+TEST_INPUT := Reports{
     {7, 6, 4, 2, 1},
     {1, 2, 7, 8, 9},
     {9, 7, 6, 2, 1},

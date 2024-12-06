@@ -9,14 +9,25 @@ import "core:testing"
 import "../utils"
 
 main :: proc() {
-    input := utils.read_input()
+    input := #load("input", string)
 
+    utils.start_measure(utils.Step.Parse)
+    parsed_input := parse(input)
+    utils.end_measure()
+
+    utils.start_measure(utils.Step.Part1)
     part_1_result := part_1()
-    part_2_result := part_2()
+    utils.end_measure()
 
-    fmt.printfln("Part 1: %d", part_1_result)
-    fmt.printfln("Part 2: %d", part_2_result)
-    return
+    utils.start_measure(utils.Step.Part2)
+    part_2_result := part_2()
+    utils.end_measure()
+
+    utils.print_results(part_1_result, part_2_result)
+}
+
+parse :: proc(input: string) -> []string {
+    return {}
 }
 
 part_1 :: proc() -> int {

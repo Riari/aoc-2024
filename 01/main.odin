@@ -8,8 +8,30 @@ import "core:testing"
 
 import "../utils"
 
+ParsedInput :: struct {
+    left: []int,
+    right: []int
+}
+
 main :: proc() {
-    input := utils.read_input()
+    input := #load("input", string)
+
+    utils.start_measure(utils.Step.Parse)
+    parsed_input := parse(input)
+    utils.end_measure()
+
+    utils.start_measure(utils.Step.Part1)
+    part_1_result := part_1(parsed_input.left, parsed_input.right)
+    utils.end_measure()
+
+    utils.start_measure(utils.Step.Part2)
+    part_2_result := part_2(parsed_input.left, parsed_input.right)
+    utils.end_measure()
+
+    utils.print_results(part_1_result, part_2_result)
+}
+
+parse :: proc(input: string) -> ParsedInput {
     pairs, _ := strings.split_lines(input)
 
     left := [dynamic]int{}
@@ -26,11 +48,7 @@ main :: proc() {
         append(&right, r)
     }
 
-    part_1_result := part_1(left[:], right[:])
-    part_2_result := part_2(left[:], right[:])
-
-    fmt.printfln("Part 1: %d", part_1_result)
-    fmt.printfln("Part 2: %d", part_2_result)
+    return ParsedInput{left[:], right[:]}
 }
 
 part_1 :: proc(left: []int, right: []int) -> int {

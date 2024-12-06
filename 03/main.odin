@@ -11,14 +11,17 @@ import "core:unicode/utf8"
 import "../utils"
 
 main :: proc() {
-    input := utils.read_input()
+    input := #load("input", string)
 
+    utils.start_measure(utils.Step.Part1)
     part_1_result := part_1(input)
-    part_2_result := part_2(input)
+    utils.end_measure()
 
-    fmt.printfln("Part 1: %d", part_1_result)
-    fmt.printfln("Part 2: %d", part_2_result)
-    return
+    utils.start_measure(utils.Step.Part2)
+    part_2_result := part_2(input)
+    utils.end_measure()
+
+    utils.print_results(part_1_result, part_2_result)
 }
 
 PATTERN_MUL := []rune{'m', 'u', 'l', '(', ',', ')'}

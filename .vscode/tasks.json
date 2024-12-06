@@ -23,11 +23,27 @@
             "group": "build"
         },
         {
+            "label": "Run",
+            "type": "shell",
+            "command": "odin run . -out:../build/${relativeFileDirname}",
+            "options": {
+                "cwd": "${relativeFileDirname}"
+            },
+            "windows": {
+                "command": "odin run . -out:..\\build\\${relativeFileDirname}"
+            },
+            "problemMatcher": [],
+            "group": "none"
+        },
+        {
             "label": "Test",
             "type": "shell",
-            "command": "odin test ${relativeFileDirname} -debug -define:ODIN_TEST_SHORT_LOGS=true -out:build/${relativeFileDirname}-tests",
+            "command": "odin test . -debug -define:ODIN_TEST_SHORT_LOGS=true -out:../build/${relativeFileDirname}-tests",
+            "options": {
+                "cwd": "${relativeFileDirname}"
+            },
             "windows": {
-                "command": "odin test ${relativeFileDirname} -debug -define:ODIN_TEST_SHORT_LOGS=true -out:build\\${relativeFileDirname}-tests.exe"
+                "command": "odin test . -debug -define:ODIN_TEST_SHORT_LOGS=true -out:..\\build\\${relativeFileDirname}-tests.exe"
             },
             "problemMatcher": [],
             "group": "test"
