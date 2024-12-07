@@ -9,20 +9,29 @@ import "core:unicode/utf8"
 
 import "../utils"
 
-PatrolMap :: [dynamic][]rune
-
-PatrolResult :: struct{
-    is_loop: bool,
-    map_with_route: PatrolMap
-}
-
 Vector2i :: struct{
     x: int,
     y: int
 }
 
+PatrolMap :: [dynamic][]rune
+
+RouteSegment :: [2]Vector2i
+
+PatrolResult :: struct{
+    // True if the patrol is a loop
+    is_loop: bool,
+    // A list of all the visited positions
+    visited: [dynamic]Vector2i,
+    // Start and end coordinates for each segment in the route
+    route_segments: [dynamic]RouteSegment,
+    // Direction of travel (as indices into DIRECTIONS) for each segment in the route
+    route_directions: [dynamic]int
+}
+
 OBSTACLE := '#'
-VISITED := 'X'
+EMPTY := '.'
+START := '^'
 
 DIRECTIONS := [4]Vector2i{
     {0, -1},    // N
@@ -32,7 +41,7 @@ DIRECTIONS := [4]Vector2i{
 }
 
 main :: proc() {
-    input := #load("input", string)
+    input := #load("test_input", string)
 
     utils.start_measure(utils.Step.Parse)
     parsed_input := parse(input)
@@ -76,45 +85,76 @@ delete_map :: proc(patrol_map: PatrolMap) {
     delete(patrol_map)
 }
 
-print_map :: proc(patrol_map: PatrolMap) {
-    fmt.printfln("Route map has %d rows", len(patrol_map))
-    for row in patrol_map {
-        fmt.println(row)
-    }
-    fmt.println("------------\n\n\n")
+delete_result :: proc(result: PatrolResult) {
+    delete(result.visited)
+    delete(result.route_segments)
+    delete(result.route_directions)
 }
 
-check_patrol :: proc(patrol_map_original: PatrolMap, record_route: bool, min_steps: int) -> PatrolResult {
-    patrol_map := clone_map(patrol_map_original)
+print_map :: proc(patrol_map: PatrolMap, visited: [dynamic]Vector2i) {
+    width, height := len(patrol_map[0]), len(patrol_map)
 
-    width := len(patrol_map[0])
-    height := len(patrol_map)
+    for y in 0..<height {
+        loop_x: for x in 0..<width {
+            for position in visited {
+                if position.x == x && position.y == y {
+                    fmt.print('X')
+                    continue loop_x
+                }
+            }
+
+            fmt.print(patrol_map[y][x])
+        }
+        fmt.print("\n")
+    }
+
+    fmt.println("\n\n")
+}
+
+check_patrol :: proc(patrol_map: PatrolMap, start_direction: Vector2i, record_visited: bool) -> PatrolResult {
+    width, height := len(patrol_map[0]), len(patrol_map)
 
     current_direction_index := 0
-    current_direction := DIRECTIONS[0]
+    current_direction := start_direction
     current_position: Vector2i
 
-    outer: for y in 0..<height {
+    loop_find_start: for y in 0..<height {
         for x in 0..<width {
-            if patrol_map[y][x] == '^' {
+            if patrol_map[y][x] == START {
                 current_position = {x, y}
-                break outer
+                break loop_find_start
             }
         }
     }
 
     is_loop := true
-    for i in 0..<min_steps {
-        if record_route do patrol_map[current_position.y][current_position.x] = VISITED
-
+    route_segments := make([dynamic]RouteSegment)
+    route_directions := make([dynamic]int)
+    segment_start := current_position
+    loop_patrol: for {
         next := Vector2i{current_position.x + current_direction.x, current_position.y + current_direction.y}
 
         if next.x < 0 || next.x >= width || next.y < 0 || next.y >= height {
             is_loop = false
+            append(&route_segments, RouteSegment{segment_start, current_position})
+            append(&route_directions, current_direction_index)
             break
         }
 
         if patrol_map[next.y][next.x] == OBSTACLE {
+            route_segment := RouteSegment{segment_start, current_position}
+
+            for segment in route_segments {
+                if segment[0].x == route_segment[0].x && segment[0].y == route_segment[0].y && segment[1].x == route_segment[1].x && segment[1].y == route_segment[1].y {
+                    break loop_patrol
+                }
+            }
+
+            append(&route_segments, route_segment)
+            append(&route_directions, current_direction_index)
+
+            segment_start = current_position
+
             current_direction_index += 1
             if current_direction_index >= len(DIRECTIONS) do current_direction_index = 0
             current_direction = DIRECTIONS[current_direction_index]
@@ -124,43 +164,90 @@ check_patrol :: proc(patrol_map_original: PatrolMap, record_route: bool, min_ste
         current_position = next
     }
 
-    return PatrolResult{is_loop, patrol_map}
-}
-
-solve :: proc(patrol_map_original: PatrolMap, find_obstacles: bool) -> int {
-    patrol_result := check_patrol(patrol_map_original, true, find_obstacles ? 10000 : 6000)
-    defer delete_map(patrol_result.map_with_route)
-
-    patrol_map := patrol_result.map_with_route
-
-    width := len(patrol_map[0])
-    height := len(patrol_map)
-
     visited := make([dynamic]Vector2i)
-    defer delete(visited)
-    for y in 0..<height {
-        for x in 0..<width {
-            if patrol_map[y][x] == VISITED {
-                position := Vector2i{x, y}
-                index, found := slice.linear_search(visited[:], position)
-                if !found do append(&visited, position)
+    if record_visited {
+        for segment in route_segments {
+            a, b := segment[0], segment[1]
+            start_x, end_x, start_y, end_y := 0, 0, 0, 0
+            if a.x <= b.x {
+                start_x = a.x
+                end_x = b.x
+            } else {
+                start_x = b.x
+                end_x = a.x + 1
+            }
+
+            if start_x == end_x do end_x += 1
+
+            if a.y <= b.y {
+                start_y = a.y
+                end_y = b.y
+            } else {
+                start_y = b.y
+                end_y = a.y + 1
+            }
+
+            if start_y == end_y do end_y += 1
+
+            for x in start_x..<end_x {
+                for y in start_y..<end_y {
+                    position := Vector2i{x, y}
+                    index, found := slice.linear_search(visited[:], position)
+                    if !found do append(&visited, position)
+                }
             }
         }
     }
 
-    if !find_obstacles do return len(visited)
+    return PatrolResult{is_loop, visited, route_segments, route_directions}
+}
+
+solve :: proc(patrol_map: PatrolMap, find_obstacles: bool) -> int {
+    result := check_patrol(patrol_map, DIRECTIONS[0], true)
+    defer delete_result(result)
+
+    if !find_obstacles do return len(result.visited)
 
     looping_obstacles := 0
-    for position in visited {
-        if patrol_map_original[position.y][position.x] == '^' do continue
+    start_position := Vector2i{result.route_segments[0][0].x, result.route_segments[0][0].y}
+    for i in 0..<len(result.route_segments) {
+        segment := result.route_segments[i]
+        direction_index := result.route_directions[i]
+        direction := DIRECTIONS[direction_index]
 
-        patrol_map_copy := clone_map(patrol_map_original)
-        defer delete_map(patrol_map_copy)
-        patrol_map_copy[position.y][position.x] = OBSTACLE
+        start_x, end_x := segment[0].x, segment[1].x
+        start_y, end_y := segment[0].y, segment[1].y
 
-        modified_patrol_result := check_patrol(patrol_map_copy, false, 10000)
-        defer delete_map(modified_patrol_result.map_with_route)
-        if modified_patrol_result.is_loop do looping_obstacles += 1
+        if end_x == start_x do end_x += 1
+        if end_y == start_y do end_y += 1
+
+        for x in start_x..<end_x {
+            for y in start_y..<end_y {
+                patrol_map_copy := clone_map(patrol_map)
+                defer delete_map(patrol_map_copy)
+                patrol_map_copy[y][x] = OBSTACLE
+                //patrol_map_copy[start_position.y][start_position.x] = EMPTY
+
+                previous_position: Vector2i
+                if x == segment[0].x && y == segment[0].y {
+                    if i == 0 do continue
+                    previous_segment := result.route_segments[i - 1]
+                    previous_direction_index := direction_index == 0 ? 3 : direction_index - 1
+                    previous_direction := DIRECTIONS[previous_direction_index]
+                    previous_position = Vector2i{previous_segment[1].x + -(previous_direction.x), previous_segment[1].y + -(previous_direction.y)}
+                } else {
+                    previous_position = Vector2i{x + -(direction.x), y + -(direction.y)}
+                }
+
+                //patrol_map_copy[previous_position.y][previous_position.x] = START
+
+                //print_map(patrol_map_copy, {})
+
+                modified_patrol_result := check_patrol(patrol_map_copy, direction, false)
+                defer delete_result(modified_patrol_result)
+                if modified_patrol_result.is_loop do looping_obstacles += 1
+            }
+        }
     }
 
     return looping_obstacles
