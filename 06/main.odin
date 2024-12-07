@@ -5,6 +5,7 @@ import "core:slice"
 import "core:strconv"
 import "core:strings"
 import "core:testing"
+import "core:thread"
 import "core:unicode/utf8"
 
 import "../utils"
@@ -29,6 +30,11 @@ PatrolResult :: struct{
     route_segments: [dynamic]RouteSegment,
     // Direction of travel (as indices into DIRECTIONS) for each segment in the route
     route_directions: [dynamic]int
+}
+
+PatrolTask :: struct{
+    patrol_map: PatrolMap,
+    result: PatrolResult
 }
 
 OBSTACLE := '#'
@@ -197,25 +203,48 @@ check_patrol :: proc(patrol_map: PatrolMap, record_visited: bool) -> PatrolResul
     return PatrolResult{start_position, is_loop, visited, route_segments, route_directions}
 }
 
+PATROL_TASKS: [dynamic]PatrolTask
+
+check_patrol_task: thread.Task_Proc : proc(task: thread.Task) {
+    task_index := cast(^int)task.data
+    result := check_patrol(PATROL_TASKS[task_index^].patrol_map, false)
+    PATROL_TASKS[task_index^].result = result
+}
+
 solve :: proc(patrol_map: PatrolMap, find_obstacles: bool) -> int {
     result := check_patrol(patrol_map, true)
     defer delete_result(result)
 
     if !find_obstacles do return len(result.visited)
 
-    looping_obstacles := 0
+    resize(&PATROL_TASKS, len(result.visited))
+
+    pool: thread.Pool
+    thread_count :: 8
+    thread.pool_init(&pool, context.allocator, thread_count)
+
+    task_indices := make([dynamic]int, len(result.visited))
+
     for i in 0..<len(result.visited) {
         position := result.visited[i]
 
         if result.start == position do continue
 
         patrol_map_copy := clone_map(patrol_map)
-        defer delete_map(patrol_map_copy)
         patrol_map_copy[position.y][position.x] = OBSTACLE
+        PATROL_TASKS[i].patrol_map = patrol_map_copy
 
-        modified_patrol_result := check_patrol(patrol_map_copy, false)
-        defer delete_result(modified_patrol_result)
-        if modified_patrol_result.is_loop do looping_obstacles += 1
+        task_indices[i] = i
+
+        thread.pool_add_task(&pool, context.allocator, check_patrol_task, &task_indices[i])
+    }
+
+    thread.pool_start(&pool)
+    thread.pool_finish(&pool)
+
+    looping_obstacles := 0
+    for task in PATROL_TASKS {
+        if task.result.is_loop do looping_obstacles += 1
     }
 
     return looping_obstacles
