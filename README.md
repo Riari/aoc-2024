@@ -21,7 +21,7 @@ Solutions for [Advent of Code 2024](https://adventofcode.com/2024) in [Odin](htt
 | Day 8   | Part 1   | ✅            |
 |         | Part 2   | ✅            |
 | Day 9   | Part 1   | ✅            |
-|         | Part 2   | ❌            |
+|         | Part 2   | ✅            |
 | Day 10  | Part 1   | ❌            |
 |         | Part 2   | ❌            |
 | Day 11  | Part 1   | ❌            |
