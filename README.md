@@ -33,7 +33,7 @@ Solutions for [Advent of Code 2024](https://adventofcode.com/2024) in [Odin](htt
 | Day 14  | Part 1   | ✅            |
 |         | Part 2   | ✅            |
 | Day 15  | Part 1   | ✅            |
-|         | Part 2   | ❌            |
+|         | Part 2   | ✅            |
 | Day 16  | Part 1   | ❌            |
 |         | Part 2   | ❌            |
 | Day 17  | Part 1   | ❌            |
